@@ -49,34 +49,42 @@ router.post("/register", async(request, response)=>{
 });
 
 //login route
-router.post("/login", async(request, response)=>{
-    const {email, password} = request.body;
+router.post('/login', async (req, res) => {
+    const { email, password } = req.body;
 
-    try{
-        //check if the email is correct
-        const user = await UserSchema.findOne({email});
-        if(!user){
-            response.status(400).json({message: "Invalid credentials"});
+    try {
+        // Check if the user exists
+        const user = await UserSchema.findOne({ email });
+        if (!user) {
+            // Return the same generic message for invalid email or password
+            return res.status(400).json({ msg: 'Invalid credentials' });
         }
-        //check if the password is correct
+
+        // If user exists, check if the password matches
         const isMatch = await bcrypt.compare(password, user.password);
-        if(!isMatch){
-            response.status(400).json({message: "Invalid credentials"});
+        if (!isMatch) {
+            return res.status(400).json({ msg: 'Invalid credentials' });
         }
-        //create a payload to put the user id in the token
+
+        // If credentials are correct, generate a JWT token
         const payload = {
-            user:{
-                id: user.id
+            user: {
+                id: user.id,
+            },
+        };
+
+        jwt.sign(
+            payload,
+            process.env.JWT_SECRET, // Replace with your secret key
+            { expiresIn: '1h' },
+            (err, token) => {
+                if (err) throw err;
+                res.json({ token });
             }
-        }
-        const token=jwt.sign(payload, process.env.JWT_SECRET, {
-            expiresIn: "1h"
-        });
-
-        response.json({token});
-
-    }catch(error){
-        response.status(500).json({error: "Server error"});
+        );
+    } catch (error) {
+        console.error(error.message); // Log the error for debugging
+        res.status(500).json({ msg: 'Server error' });
     }
-})
+});
 module.exports = router;

@@ -25,7 +25,6 @@ app.use("/auth", authentication_routes);
 const task_routes = require("./routes/tasks");
 app.use("/tasks", task_routes);
 
-
 //connect to mongodb
 mongoose.connect(process.env.MONGODB_URI,{
     useNewUrlParser: true,
