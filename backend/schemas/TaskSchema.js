@@ -2,7 +2,7 @@ const mongoose = require('mongoose');
 
 //create the schema for the task
 const TaskSchema = new mongoose.Schema({
-    userID:{
+    userId:{
         type: mongoose.Schema.Types.ObjectId,
         ref: "UserSchema",
         required: true,
@@ -16,7 +16,7 @@ const TaskSchema = new mongoose.Schema({
     },
     status:{
         type: String,
-        enum: ["pending", "ongoing", "completed"],
+        enum: ["pending", "Pending", "ongoing", "Ongoing", "completed", "Completed"],
         default: "pending",
     },
     dueDate:{

@@ -50,7 +50,7 @@ router.post("/register", async(request, response)=>{
 
 //login route
 router.post("/login", async(request, response)=>{
-    const {email, password} = req.body;
+    const {email, password} = request.body;
 
     try{
         //check if the email is correct
