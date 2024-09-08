@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { retrieveTasks, createTask, updateTask, deleteTask } from "../API";
+import { useNavigate } from 'react-router-dom';
 
 const TaskPage = () => {
   const [tasks, setTasks] = useState([]);
@@ -7,20 +8,33 @@ const TaskPage = () => {
   const [description, setDescription] = useState('');
   const [dueDate, setDueDate] = useState('');
   const [status, setStatus] = useState('pending');
+  const navigate = useNavigate();
   
   useEffect(() => {
     const fetchTasks = async () => {
         const token = localStorage.getItem('token');
         const headers = { 'x-auth-token': token };
+        if (!token) {
+          navigate('/login');
+          return;
+        }
         try {
             const response = await retrieveTasks(headers);
             setTasks(response.data);
         } catch (err) {
-            console.error(err);
+            // Check if the error is related to authentication (e.g., token expired or unauthorized)
+            if (err.response && (err.response.status === 401 || err.response.status === 403)) {
+            // If unauthorized or forbidden, remove the token and redirect to login
+            localStorage.removeItem('token');
+            navigate('/login');
+          } else {
+            // Log other errors to the console if needed (for debugging purposes)
+            console.error("An unexpected error occurred:", err);
+          }
         }
     };
     fetchTasks();
-  }, []);
+  }, [navigate]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
