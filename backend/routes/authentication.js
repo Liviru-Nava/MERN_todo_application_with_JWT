@@ -3,6 +3,9 @@ const express = require('express');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const UserSchema = require('../schemas/UserSchema');
+const axios = require('axios');
+const dotenv = require('dotenv');
+dotenv.config();
 
 //define router
 const router = express.Router();
@@ -48,15 +51,23 @@ router.post("/register", async(request, response)=>{
     }
 });
 
-//login route
+// Login route
 router.post('/login', async (req, res) => {
-    const { email, password } = req.body;
+    const { email, password, recaptchaToken } = req.body;
 
     try {
+        // Verify reCAPTCHA
+        const secretKey = process.env.RECAPTCHA_SECRET_KEY; // Get your reCAPTCHA secret key from environment variables
+        const response = await axios.post(`https://www.google.com/recaptcha/api/siteverify?secret=${secretKey}&response=${recaptchaToken}`);
+        const { success } = response.data;
+
+        if (!success) {
+            return res.status(400).json({ msg: 'reCAPTCHA verification failed' });
+        }
+
         // Check if the user exists
         const user = await UserSchema.findOne({ email });
         if (!user) {
-            // Return the same generic message for invalid email or password
             return res.status(400).json({ msg: 'Invalid credentials' });
         }
 
@@ -83,8 +94,9 @@ router.post('/login', async (req, res) => {
             }
         );
     } catch (error) {
-        console.error(error.message); // Log the error for debugging
+        console.error(error.message);
         res.status(500).json({ msg: 'Server error' });
     }
 });
+
 module.exports = router;
